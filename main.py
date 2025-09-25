@@ -1,6 +1,6 @@
 import sys
 import os
-from google import genai
+from google import genai # type: ignore
 from google.genai import types # type: ignore
 from dotenv import load_dotenv # type: ignore
 
