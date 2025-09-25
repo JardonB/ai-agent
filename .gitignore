@@ -11,3 +11,6 @@ wheels/
 
 #environmental variables
 .env
+
+#calculator
+calculator
