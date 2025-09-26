@@ -1,5 +1,7 @@
 import os
 from config import *
+from google import genai # type: ignore
+from google.genai import types # type: ignore
 
 def get_file_content(working_directory, file_path):
     file_abs_path = os.path.abspath(os.path.join(working_directory, file_path))
@@ -18,3 +20,17 @@ def get_file_content(working_directory, file_path):
             return content
     except Exception as e:
         return f'Error: {e}'
+    
+schema_get_file_content = types.FunctionDeclaration(
+    name="get_file_content",
+    description="Reads the content of a file within the working directory, with a max size of 10000 characters. After 10000 characters the file is truncated.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="The relative path of the file to be read",
+            ),
+        },
+    ),
+)
