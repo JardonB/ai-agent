@@ -3,9 +3,8 @@ import os
 from google import genai # type: ignore
 from google.genai import types # type: ignore
 from dotenv import load_dotenv # type: ignore
+from config import *
 
-#variables
-model = 'gemini-2.0-flash-001'
 
 def main():
     load_dotenv()
@@ -42,7 +41,11 @@ def generate_content(client, messages, verbose):
     #show_troubleshooting_msgs() #shows user input info for troubleshooting
 
     #assign generate_content to an object
-    response = client.models.generate_content(model=model, contents=messages)
+    response = client.models.generate_content(
+        model=model_name,
+        contents=messages,
+        config=types.GenerateContentConfig(system_instruction=system_prompt),
+    )
 
     if verbose: #print verbose messages
         print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
