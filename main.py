@@ -1,10 +1,24 @@
 import sys
 import os
+from dotenv import load_dotenv # type: ignore
+
 from google import genai # type: ignore
 from google.genai import types # type: ignore
-from dotenv import load_dotenv # type: ignore
-from config import *
 
+from config import *
+from functions.get_files_info import schema_get_files_info
+from functions.get_file_content import schema_get_file_content
+from functions.run_python_file import schema_run_python_file
+from functions.write_file import schema_write_file
+
+available_functions = types.Tool(
+    function_declarations=[
+        schema_get_files_info,
+        schema_get_file_content,
+        schema_run_python_file,
+        schema_write_file
+    ]
+)
 
 def main():
     load_dotenv()
@@ -33,7 +47,7 @@ def main():
         types.Content(role="user", parts=[types.Part(text=user_prompt)]),
     ]
 
-    if verbose: print(f"User prompt: {user_prompt}") #print verbose message
+    if verbose: print(f"User prompt: {user_prompt}") #print verbose messag
 
     generate_content(client, messages, verbose)
 
@@ -44,15 +58,22 @@ def generate_content(client, messages, verbose):
     response = client.models.generate_content(
         model=model_name,
         contents=messages,
-        config=types.GenerateContentConfig(system_instruction=system_prompt),
+        config=types.GenerateContentConfig(
+            tools=[available_functions], 
+            system_instruction=system_prompt),
     )
+
 
     if verbose: #print verbose messages
         print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
         print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
 
-    #print the text attribute of the response object
-    print(f"Response: {response.text}")
+    #response handling
+    if response.function_calls:
+        for func_call in response.function_calls:
+            print(f"Calling function: {func_call.name}({func_call.args})")
+    else:
+        print(f"Response: {response.text}")
 
 
 def show_troubleshooting_msgs():
