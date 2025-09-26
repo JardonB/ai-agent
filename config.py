@@ -2,6 +2,11 @@
 file_char_limit = 10000 #Character limit for files
 run_timeout = 30        #timeout for run_python_file
 
+#Working directory
+working_dir = "./calculator"
+#IT IS EXTREMELY IMPORTANT THAT THIS VARIABLE IS SET CORRECTLY 
+#TO PREVENT UNWANTED ACCESS OR MODIFICATIONS BY THE AI AGENT
+
 #genai variables
 model_name = 'gemini-2.0-flash-001'
 system_prompt = """
