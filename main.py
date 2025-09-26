@@ -5,11 +5,12 @@ from dotenv import load_dotenv # type: ignore
 from google import genai # type: ignore
 from google.genai import types # type: ignore
 
-from config import *
+from config import model_name, system_prompt, working_dir
 from functions.get_files_info import schema_get_files_info
 from functions.get_file_content import schema_get_file_content
 from functions.run_python_file import schema_run_python_file
 from functions.write_file import schema_write_file
+from functions.call_function import call_function
 
 available_functions = types.Tool(
     function_declarations=[
@@ -52,8 +53,6 @@ def main():
     generate_content(client, messages, verbose)
 
 def generate_content(client, messages, verbose):
-    #show_troubleshooting_msgs() #shows user input info for troubleshooting
-
     #assign generate_content to an object
     response = client.models.generate_content(
         model=model_name,
@@ -70,18 +69,20 @@ def generate_content(client, messages, verbose):
 
     #response handling
     if response.function_calls:
-        for func_call in response.function_calls:
-            print(f"Calling function: {func_call.name}({func_call.args})")
-    else:
-        print(f"Response: {response.text}")
+        function_call_result = call_function(response.function_calls[0], verbose=verbose)
+        
+        if not getattr(function_call_result, "parts", None):
+            raise RuntimeError("Function call returned no parts")
+        response_part = function_call_result.parts[0]
+        if not getattr(response_part, "function_response", None):
+            raise RuntimeError("Missing function_response in tool content")
+        payload = response_part.function_response.response
+        if payload is None:
+            raise RuntimeError("Missing response payload")
+        
+        if verbose:
+            print(f"-> {payload}")
 
-
-def show_troubleshooting_msgs():
-    #troubleshooting stuff to help me think:
-    print(f"User inputs: {sys.argv[1:]}")
-    print(f"User prompt: \"{sys.argv[1]}\"")
-    print(f"len(user_prompt): {len(sys.argv[1])}")
-    print(f"len(user_prompt.strip()): {len(sys.argv[1].strip())}")
 
 
 if __name__ == "__main__":
