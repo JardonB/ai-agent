@@ -5,7 +5,7 @@ from dotenv import load_dotenv # type: ignore
 from google import genai # type: ignore
 from google.genai import types # type: ignore
 
-from config import model_name, system_prompt, working_dir
+from config import model_name, system_prompt, max_iterations, working_dir
 from functions.get_files_info import schema_get_files_info
 from functions.get_file_content import schema_get_file_content
 from functions.run_python_file import schema_run_python_file
@@ -48,9 +48,20 @@ def main():
         types.Content(role="user", parts=[types.Part(text=user_prompt)]),
     ]
 
-    if verbose: print(f"User prompt: {user_prompt}") #print verbose messag
+    if verbose: print(f"User prompt: {user_prompt}") #print verbose message
 
-    generate_content(client, messages, verbose)
+    #generate_content loop
+    for i in range(max_iterations):
+        try:
+            if verbose: print(f'Iteration: {i} Number of messages: {len(messages)}')
+            response = generate_content(client, messages, verbose)
+            if response is not None and getattr(response, "text", None):
+                print(f'Response: {response.text}')
+                break
+        except Exception as e:
+            import traceback; traceback.print_exc()
+            print(f'Error: {e}')
+
 
 def generate_content(client, messages, verbose):
     #assign generate_content to an object
@@ -62,26 +73,38 @@ def generate_content(client, messages, verbose):
             system_instruction=system_prompt),
     )
 
+    #get response candidates and append to messages
+    for candidate in (response.candidates or []):
+        messages.append(candidate.content)
 
     if verbose: #print verbose messages
         print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
         print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
 
     #response handling
-    if response.function_calls:
-        function_call_result = call_function(response.function_calls[0], verbose=verbose)
+    for func_call in (getattr(response, "function_calls", None) or []):
+        function_call_result = call_function(func_call, verbose=verbose)
         
         if not getattr(function_call_result, "parts", None):
             raise RuntimeError("Function call returned no parts")
+        
+        messages.append(types.Content(role="user",parts=function_call_result.parts))
+        
         response_part = function_call_result.parts[0]
         if not getattr(response_part, "function_response", None):
             raise RuntimeError("Missing function_response in tool content")
+        
         payload = response_part.function_response.response
         if payload is None:
             raise RuntimeError("Missing response payload")
         
         if verbose:
             print(f"-> {payload}")
+
+        return None
+
+    return response
+
 
 
 
