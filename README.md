@@ -55,4 +55,6 @@ Writes content to a file.  This will overwrite any existing file at the specifie
 *   **Security:** All file operations are constrained to a designated working directory.  The agent cannot access files outside of this directory.
 *   **File Size Limits:** The `get_file_content` function truncates files after 10,000 characters.
 *   **Error Handling:**  The functions will return dictionaries indicating success or failure.  Check the contents of the returned dictionaries for error messages.
+
+# This project was created by R. Jordan Breitling following the boot.dev "Build an AI Agent in Python" course
 ```
