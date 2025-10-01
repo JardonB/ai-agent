@@ -4,7 +4,7 @@ run_timeout = 30        #timeout for run_python_file
 max_iterations = 20     #number of allowed iterations for generate_content loop
 
 #Working directory
-working_dir = "./calculator"
+working_dir = "./working_directory"
 #IT IS EXTREMELY IMPORTANT THAT THIS VARIABLE IS SET CORRECTLY 
 #TO PREVENT UNWANTED ACCESS OR MODIFICATIONS BY THE AI AGENT
 
